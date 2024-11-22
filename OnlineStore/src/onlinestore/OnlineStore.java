@@ -1,8 +1,8 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Main.java to edit this template
- */
 package onlinestore;
+
+import java.util.Arrays;
+import tables.address.Address;
+import tables.address.AddressType;
 
 /**
  *
@@ -14,7 +14,18 @@ public class OnlineStore {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        // TODO code application logic here
+
+        Address addy = Address.fromID(1);
+
+        System.out.println(addy);
+        addy.setStreet("University Dr N");
+        System.out.println(addy);
+        
+        AddressType[] types = new AddressType[]{AddressType.BILLING, AddressType.SHIPPING};
+        addy.setTypes(Arrays.asList(types));
+
+        addy = Address.fromID(1);
+        System.out.println(addy);
     }
-    
+
 }
