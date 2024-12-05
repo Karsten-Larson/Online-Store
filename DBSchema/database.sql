@@ -126,20 +126,22 @@ CREATE TABLE IF NOT EXISTS order_item (
     PRIMARY KEY (order_id, product_id)
 );
 
-CREATE TABLE IF NOT EXISTS wishlist_item (
+CREATE TABLE IF NOT EXISTS wishlist(
 	wishlist_id SERIAL PRIMARY KEY,
+	customer_id INT,
+	wishlist_name VARCHAR(50),
+	FOREIGN KEY (customer_id) REFERENCES customer(customer_id)
+);
+
+CREATE TABLE IF NOT EXISTS wishlist_items(
+	wishlist_id int,
 	product_id int,
 	quantity INT NOT NULL,
+	PRIMARY KEY (wishlist_id, product_id),
+	FOREIGN KEY (wishlist_id) REFERENCES wishlist(wishlist_id),
 	FOREIGN KEY (product_id) REFERENCES product(product_id)
 );
 
-CREATE TABLE IF NOT EXISTS wishlist(
-	wishlist_id INT,
-	customer_id INT,
-	PRIMARY KEY (wishlist_id,customer_id),
-	FOREIGN KEY (wishlist_id) REFERENCES wishlist_item (wishlist_id),
-	FOREIGN KEY (customer_id) REFERENCES customer(customer_id)
-);
 
 -- Inserting Data
 
@@ -221,23 +223,24 @@ INSERT INTO product_price_change (product_id, new_product_price, old_product_pri
 (8, 34.99, 29.99),    -- Basketball
 (9, 219.99, 199.99);  -- Headphones
 
-INSERT INTO wishlist_item (product_id, quantity) VALUES
-	(1,2), --Smartphone
-	(2,1), --Laptop
-	(3,2), --Sofa
-	(7,1), --Banana
-	(4,3); -- Tshirt
+INSERT INTO wishlist (customer_id,wishlist_name) VALUES
+	(1,'Dorm'),
+	(2,'Kitchen'),
+	(3,'Art'),
+	(4,'Tech'),
+	(1,'House');
 
-INSERT INTO wishlist (wishlist_id, customer_id) VALUES
-	(1,1),
-	(2,3),
-	(3,4),
-	(4,2),
-	(5,1);
+INSERT INTO wishlist_items(wishlist_id,product_id,quantity) VALUES
+	(1,1,2), --Smartphone
+	(1,2,1), --Laptop
+	(2,3,2), --Sofa
+	(3,7,1), --Banana
+	(2,4,3); -- Tshirt
 
-INSERT INTO payment_info(customer_id, billing_address_id, firstname, lastname, card_number, exp_date, cvv) VALUES
-	(1,1,'Karsten', 'Larson', 123778979, '2026-05-30', 234),
-	(1,1,'Karsten', 'Larson', 768908764, '2029-10-30', 008),
+INSERT INTO payment_info(customer_id, billing_address_id, firstname, lastname, card_number, exp_date, cvv)
+VALUES
+	(1,1,'Karsten', 'Larson', 123778979, '2026-05-30',234),
+	(1,1,'Karsten', 'Larson', 768908764, '2029-10-30',008),
 	(2,4, 'Owen', 'Sailer', 123456788, '2030-11-30', 448),
 	(3,4, 'Patrick', 'Arbach', 556788976, '2023-09-30', 478);
 
@@ -255,4 +258,3 @@ INSERT INTO order_item (product_id, order_id, unit_price, quantity) VALUES
 	(13, 2, 799.99, 1),
 	(7, 3, 1.99, 4),
 	(9, 3, 199.99, 1);
-
