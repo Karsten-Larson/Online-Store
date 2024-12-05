@@ -110,7 +110,7 @@ CREATE TABLE IF NOT EXISTS customer_order (
 	payment_id INT NOT NULL,
 	shipping_id INT NOT NULL,
 	order_status ORDER_STATUS NOT NULL DEFAULT('pending'),
-	order_date DATE,
+	order_date DATE NOT NULL DEFAULT now(),
 	FOREIGN KEY (customer_id) REFERENCES customer (customer_id),
 	FOREIGN KEY (payment_id) REFERENCES payment_info (payment_id),
 	FOREIGN KEY (shipping_id) REFERENCES Address(address_id)
