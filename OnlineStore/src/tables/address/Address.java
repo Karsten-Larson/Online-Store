@@ -29,7 +29,7 @@ public class Address extends Table {
      */
     public Address(ResultSet rs) {
         try {
-            id = rs.getInt("id");
+            id = rs.getInt("address_id");
             street = rs.getString("street");
             city = rs.getString("city");
             state = rs.getString("state");
@@ -53,10 +53,10 @@ public class Address extends Table {
      */
     public static Address fromID(int id) {
         String query
-                = "SELECT a.id, street, city, state, zip_code, apt_number, type FROM address a "
+                = "SELECT a.address_id, street, city, state, zip_code, apt_number, type FROM address a "
                 + "INNER JOIN address_relation ar "
-                + "ON a.id = ar.address_id "
-                + "WHERE a.id = ?";
+                + "ON a.address_id = ar.address_id "
+                + "WHERE a.address_id = ?";
 
         ResultSet rs = select(query, id);
 
@@ -75,7 +75,7 @@ public class Address extends Table {
         String query
                 = "UPDATE address "
                 + "SET street=? "
-                + "WHERE id=?;";
+                + "WHERE address_id=?;";
 
         // Run the update
         update(query, street, id);
@@ -91,7 +91,7 @@ public class Address extends Table {
         String query
                 = "UPDATE address "
                 + "SET city=? "
-                + "WHERE id=?;";
+                + "WHERE address_id=?;";
 
         // Run the update
         update(query, city, id);
@@ -107,7 +107,7 @@ public class Address extends Table {
         String query
                 = "UPDATE address "
                 + "SET state=? "
-                + "WHERE id=?;";
+                + "WHERE address_id=?;";
 
         // Run the update
         update(query, state, id);
@@ -123,7 +123,7 @@ public class Address extends Table {
         String query
                 = "UPDATE address "
                 + "SET zip_code=? "
-                + "WHERE id=?;";
+                + "WHERE address_id=?;";
 
         // Run the update
         update(query, zipCode, id);
@@ -138,8 +138,8 @@ public class Address extends Table {
     public void setApartmentNumber(String apartmentNumber) {
         String query
                 = "UPDATE address "
-                + "SET apt_num=? "
-                + "WHERE id=?;";
+                + "SET apt_number=? "
+                + "WHERE address_id=?;";
 
         // Run the update
         update(query, apartmentNumber, id);
@@ -161,10 +161,10 @@ public class Address extends Table {
         if (types.isEmpty()) {
             throw new IllegalArgumentException("Types cannot be empty");
         }
-        
+
         // Ensures no repeated types
         List<AddressType> unqiueTypes = types.stream().distinct().collect(Collectors.toList());
-        
+
         System.out.println(unqiueTypes);
 
         // Finds which types to add and remove
@@ -201,6 +201,16 @@ public class Address extends Table {
         }
 
         this.types = new ArrayList(unqiueTypes);
+    }
+
+    /**
+     * Returns whether the given address is of a given type
+     *
+     * @param type address type
+     * @return whether or not the address is of that type
+     */
+    public boolean isType(AddressType type) {
+        return types.contains(type);
     }
 
     @Override

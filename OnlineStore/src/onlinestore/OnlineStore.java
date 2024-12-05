@@ -15,13 +15,21 @@ public class OnlineStore {
      */
     public static void main(String[] args) {
 
+        /* 
+        This file will be changing until the final objects are finalized.
+        It's okay to delete this stuff 
+        */
+        
         Address addy = Address.fromID(1);
 
         System.out.println(addy);
-        addy.setStreet("University Dr N");
+        addy.setCity("Cheyenne");
+        addy.setState("Wyoming");
+        addy.setZipCode("82002");
+        addy.setApartmentNumber("515 APT");
         System.out.println(addy);
         
-        AddressType[] types = new AddressType[]{AddressType.BILLING, AddressType.SHIPPING};
+        AddressType[] types = new AddressType[]{AddressType.SHIPPING};
         addy.setTypes(Arrays.asList(types));
 
         addy = Address.fromID(1);
