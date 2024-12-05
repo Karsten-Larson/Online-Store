@@ -247,3 +247,12 @@ VALUES
 	(1, 1, 1, 'pending'),
 	(1, 2, 1, 'shipped'),
 	(2, 3, 3, 'delivered');
+
+INSERT INTO order_item (product_id, order_id, unit_price, quantity) VALUES
+	(3, 1, 599.99, 1),
+	(6, 1, 2.99, 12),
+	(11, 1, 39.99, 2),
+	(13, 2, 799.99, 1),
+	(7, 3, 1.99, 4),
+	(9, 3, 199.99, 1);
+
