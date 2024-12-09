@@ -1,10 +1,14 @@
 package tables.order;
 
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import tables.Table;
 import tables.address.Address;
+import tables.product.Product;
 
 /**
  * Class that manages all data related to the order table
@@ -21,15 +25,30 @@ public class Order extends Table {
     private Date orderDate;
     private int shippingId;
     private OrderStatus status;
+    private List<OrderItem> items;
 
-    public Order(ResultSet rs) {
+    protected Order(ResultSet rs) {
         try {
+            // Get properties
             orderId = rs.getInt("order_id");
             customerId = rs.getInt("customer_id");
             paymentId = rs.getInt("payment_id");
             orderDate = rs.getDate("order_date");
             shippingId = rs.getInt("shipping_id");
             status = OrderStatus.valueOf(rs.getString("order_status").toUpperCase());
+
+            // Get items
+            items = new ArrayList<>();
+            do {
+                int id = rs.getInt("order_item_id");
+
+                // Value is null
+                if (id == 0) {
+                    break;
+                }
+
+                items.add(OrderItem.fromID(id));
+            } while (rs.next());
         } catch (SQLException ex) {
             throw new RuntimeException(ex.getMessage());
         }
@@ -47,8 +66,9 @@ public class Order extends Table {
         }
 
         String query
-                = "SELECT order_id, customer_id, payment_id, order_date, shipping_id, order_status FROM customer_order "
-                + "WHERE order_id = ?";
+                = "SELECT co.order_id, customer_id, payment_id, order_date, shipping_id, order_status, order_item_id FROM customer_order co "
+                + "LEFT JOIN order_item oi ON co.order_id = oi.order_id "
+                + "WHERE co.order_id = ?";
 
         ResultSet rs = select(query, id);
         Order result = new Order(rs);
@@ -144,6 +164,10 @@ public class Order extends Table {
         return paymentId;
     }
 
+    public List<OrderItem> getItems() {
+        return new ArrayList<>(items);
+    }
+
     public void setOrderDate(Date orderDate) {
         String query
                 = "UPDATE customer_order "
@@ -205,9 +229,96 @@ public class Order extends Table {
         this.paymentId = paymentId;
     }
 
+    /**
+     * Gets whether or not there are items on the order
+     *
+     * @return has items
+     */
+    public boolean hasItems() {
+        return !items.isEmpty();
+    }
+
+    /**
+     * Deletes all items from the order
+     */
+    public void clearItems() {
+        for (OrderItem orderItem : items) {
+            String query
+                    = "DELETE FROM order_item "
+                    + "WHERE order_item_id=?";
+
+            update(query, orderItem.getOrderItemId());
+        }
+
+        items = new ArrayList<>();
+    }
+
+    /**
+     * Adds a product to order items
+     *
+     * @param product product object
+     * @param quantity quantity of product
+     */
+    public void addItem(Product product, int quantity) {
+        OrderItem orderItem = OrderItem.createOrder(orderId, product.getProductId(), product.getProductQuantity(), quantity);
+
+        items.add(orderItem);
+    }
+
+    /**
+     * Removes the last added item from the list
+     *
+     * @return whether or not an item was removed
+     */
+    public boolean removeItem() {
+        if (items.isEmpty()) {
+            return false;
+        }
+
+        OrderItem orderItem = OrderItem.fromID(items.getLast().getOrderItemId());
+
+        String query
+                = "DELETE FROM order_item "
+                + "WHERE order_item_id=?";
+
+        update(query, orderItem.getOrderItemId());
+
+        items.remove(orderItem);
+
+        return true;
+    }
+
+    /**
+     * Removes the first instance of the product from the order's items
+     *
+     * @param product product object
+     * @return boolean value of whether a item was removed
+     */
+    public boolean removeItem(Product product) {
+        List<Integer> ids = items.stream().map(e -> e.getProductId()).collect(Collectors.toList());
+
+        int productId = product.getProductId();
+
+        if (ids.contains(productId)) {
+            OrderItem orderItem = items.get(ids.indexOf(productId));
+
+            String query
+                    = "DELETE FROM order_item "
+                    + "WHERE order_item_id=?";
+
+            update(query, orderItem.getOrderItemId());
+
+            items.remove(ids.indexOf(productId));
+
+            return true;
+        }
+
+        return false;
+    }
+
     @Override
     public String toString() {
-        return "Order{" + "orderId=" + orderId + ", customerId=" + customerId + ", paymentId=" + paymentId + ", orderDate=" + orderDate + ", shippingId=" + shippingId + ", status=" + status + '}';
+        return "Order{" + "orderId=" + orderId + ", customerId=" + customerId + ", paymentId=" + paymentId + ", orderDate=" + orderDate + ", shippingId=" + shippingId + ", status=" + status + ", items=" + items + '}';
     }
 
 }

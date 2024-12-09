@@ -117,13 +117,14 @@ CREATE TABLE IF NOT EXISTS customer_order (
 );
 
 CREATE TABLE IF NOT EXISTS order_item (
+	order_item_id SERIAL PRIMARY KEY, 
     product_id INT NOT NULL,
     order_id INT NOT NULL,
     unit_price NUMERIC(10, 2) NOT NULL,
     quantity INT NOT NULL,
     FOREIGN KEY (product_id) REFERENCES product (product_id),
     FOREIGN KEY (order_id) REFERENCES customer_order (order_id),
-    PRIMARY KEY (order_id, product_id)
+    CONSTRAINT UNIQUE (order_id, product_id)
 );
 
 CREATE TABLE IF NOT EXISTS wishlist(

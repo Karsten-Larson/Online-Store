@@ -29,9 +29,10 @@ public class OnlineStore {
 //        o.setTypes(Arrays.asList(types));
 //
 //        System.out.println(o);
-
-
-        Order o = Order.createOrder(1, 2, 3, OrderStatus.DELIVERED, new Date(124, 10, 27));
+//        Order o = Order.createOrder(1, 2, 3, OrderStatus.DELIVERED, new Date(124, 10, 27));
+        Order o = Order.fromID(1);
+        System.out.println(o);
+        o.removeItem();
         System.out.println(o);
     }
 }

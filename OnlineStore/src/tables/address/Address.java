@@ -219,8 +219,6 @@ public class Address extends Table {
         // Ensures no repeated types
         List<AddressType> unqiueTypes = types.stream().distinct().collect(Collectors.toList());
 
-        System.out.println(unqiueTypes);
-
         // Finds which types to add and remove
         List<AddressType> toRemove
                 = this.types.stream()

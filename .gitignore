@@ -24,3 +24,4 @@ hs_err_pid*
 replay_pid*
 /OnlineStore/build/
 /Lab108-LarsonKL/nbproject/private/
+/OnlineStore/dist/
