@@ -30,13 +30,12 @@ public abstract class Table {
             // Store the result of the select query in the ResultSet
             ResultSet rs = ps.executeQuery();
 
-            // Table is empty
-            if (!rs.next()) {
-                throw new IllegalArgumentException("ResultSet is empty");
+            if (rs.next()) {
+                // Returns the result set
+                return rs;
             }
 
-            // Returns the result set
-            return rs;
+            throw new IllegalArgumentException("ResultSet is empty");
 
         } catch (SQLException ex) {
             // Major error
@@ -44,7 +43,7 @@ public abstract class Table {
         }
     }
 
-    protected static void update(String query, Object... arguments) {
+    protected static int update(String query, Object... arguments) {
         Connection conn = DatabaseManager.getConnection();
 
         try {
@@ -54,11 +53,37 @@ public abstract class Table {
             setArguments(ps, arguments);
 
             // Execute the update query
-            ps.executeUpdate();
+            return ps.executeUpdate();
         } catch (SQLException ex) {
             // Major error
             throw new RuntimeException(ex.getMessage());
         }
     }
 
+    protected static int updateRow(String query, Object... arguments) {
+        Connection conn = DatabaseManager.getConnection();
+
+        try {
+            PreparedStatement ps = conn.prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS);
+
+            // Adds all arguments to the query
+            setArguments(ps, arguments);
+
+            // Execute the update query
+            int rowsAffected = ps.executeUpdate();
+            
+            if (rowsAffected == 1) {
+                ResultSet generatedKeys = ps.getGeneratedKeys();
+
+                if (generatedKeys.next()) {
+                    return generatedKeys.getInt(1);
+                }
+            }
+
+            throw new IllegalArgumentException("More than one entity was updated/inserted");
+        } catch (SQLException ex) {
+            // Major error
+            throw new RuntimeException(ex.getMessage());
+        }
+    }
 }

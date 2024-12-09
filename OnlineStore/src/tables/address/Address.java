@@ -2,7 +2,9 @@ package tables.address;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import tables.Table;
 
@@ -14,7 +16,9 @@ import tables.Table;
  */
 public class Address extends Table {
 
-    private int id;
+    private static Map<Integer, Address> cache = new HashMap<>();
+
+    private int addressId;
     private String street;
     private String city;
     private String state;
@@ -27,9 +31,9 @@ public class Address extends Table {
      *
      * @param rs results set query of address joined with address_relation table
      */
-    public Address(ResultSet rs) {
+    protected Address(ResultSet rs) {
         try {
-            id = rs.getInt("address_id");
+            addressId = rs.getInt("address_id");
             street = rs.getString("street");
             city = rs.getString("city");
             state = rs.getString("state");
@@ -52,6 +56,10 @@ public class Address extends Table {
      * @return Address object
      */
     public static Address fromID(int id) {
+        if (cache.containsKey(id)) {
+            return cache.get(id);
+        }
+
         String query
                 = "SELECT a.address_id, street, city, state, zip_code, apt_number, type FROM address a "
                 + "INNER JOIN address_relation ar "
@@ -59,12 +67,58 @@ public class Address extends Table {
                 + "WHERE a.address_id = ?";
 
         ResultSet rs = select(query, id);
+        Address result = new Address(rs);
 
-        return new Address(rs);
+        cache.put(id, result);
+
+        return result;
+    }
+
+    /**
+     * Method that create a new Address in the database
+     *
+     * @param street street and building code
+     * @param city city
+     * @param state state
+     * @param zipCode zip code or postal code
+     * @param aptNumber apartment number
+     * @param types list of the ways this address will be used
+     * @return address object
+     */
+    public static Address createAddress(String street, String city, String state, String zipCode, String aptNumber, List<AddressType> types) {
+        String insertQuery
+                = "INSERT INTO address (street, city, state, zip_code, apt_number) "
+                + "VALUES (?, ?, ?, ?, ?)";
+
+        int id = updateRow(insertQuery, street, state, city, zipCode, aptNumber);
+
+        String insertType
+                = "INSERT INTO address_relation (address_id, type) "
+                + "VALUES (?, Cast(? AS address_type))";
+
+        for (AddressType type : types) {
+            update(insertType, id, type.name().toLowerCase());
+        }
+
+        return fromID(id);
+    }
+
+    /**
+     * Method that create a new Address in the database
+     *
+     * @param street street and building code
+     * @param city city
+     * @param state state
+     * @param zipCode zip code or postal code
+     * @param types list of the ways this address will be used
+     * @return address object
+     */
+    public static Address createAddress(String street, String city, String state, String zipCode, List<AddressType> types) {
+        return createAddress(street, city, state, zipCode, null, types);
     }
 
     public int getId() {
-        return id;
+        return addressId;
     }
 
     public String getStreet() {
@@ -78,7 +132,7 @@ public class Address extends Table {
                 + "WHERE address_id=?;";
 
         // Run the update
-        update(query, street, id);
+        update(query, street, addressId);
 
         this.street = street;
     }
@@ -94,7 +148,7 @@ public class Address extends Table {
                 + "WHERE address_id=?;";
 
         // Run the update
-        update(query, city, id);
+        update(query, city, addressId);
 
         this.city = city;
     }
@@ -110,7 +164,7 @@ public class Address extends Table {
                 + "WHERE address_id=?;";
 
         // Run the update
-        update(query, state, id);
+        update(query, state, addressId);
 
         this.state = state;
     }
@@ -126,7 +180,7 @@ public class Address extends Table {
                 + "WHERE address_id=?;";
 
         // Run the update
-        update(query, zipCode, id);
+        update(query, zipCode, addressId);
 
         this.zipCode = zipCode;
     }
@@ -142,7 +196,7 @@ public class Address extends Table {
                 + "WHERE address_id=?;";
 
         // Run the update
-        update(query, apartmentNumber, id);
+        update(query, apartmentNumber, addressId);
 
         this.apartmentNumber = apartmentNumber;
     }
@@ -187,7 +241,7 @@ public class Address extends Table {
                     + "WHERE type=Cast(? AS address_type) "
                     + "AND address_id=?";
 
-            update(query, addyType.name().toLowerCase(), id);
+            update(query, addyType.name().toLowerCase(), addressId);
         }
 
         // Adds the types that are needed
@@ -197,7 +251,7 @@ public class Address extends Table {
                     + "VALUES "
                     + " (Cast(? AS address_type), ?)";
 
-            update(query, addyType.name().toLowerCase(), id);
+            update(query, addyType.name().toLowerCase(), addressId);
         }
 
         this.types = new ArrayList(unqiueTypes);
@@ -215,7 +269,7 @@ public class Address extends Table {
 
     @Override
     public String toString() {
-        return "Address{" + "id=" + id + ", street=" + street + ", city=" + city + ", state=" + state + ", zipCode=" + zipCode + ", apartmentNumber=" + apartmentNumber + ", types=" + types + '}';
+        return "Address{" + "id=" + addressId + ", street=" + street + ", city=" + city + ", state=" + state + ", zipCode=" + zipCode + ", apartmentNumber=" + apartmentNumber + ", types=" + types + '}';
     }
 
     @Override
@@ -226,6 +280,6 @@ public class Address extends Table {
 
         Address oAddress = (Address) o;
 
-        return oAddress.id == id;
+        return oAddress.addressId == addressId;
     }
 }
