@@ -34,11 +34,20 @@ public class DatabaseManager {
      */
     private static void setConnection() {
         try {
+            // load the driver
             Class.forName("org.postgresql.Driver");
-            connection = DriverManager.getConnection(URL, USERNAME, PASSWORD);
-        } catch (ClassNotFoundException | SQLException exception) {
-            // Catch the exception but still crash if it cannot get the connection
-            throw new RuntimeException(exception.getMessage());
+            // connect to the database
+            connection = 
+                    DriverManager.getConnection(URL, USERNAME, PASSWORD);
+           
+        }
+        catch (ClassNotFoundException e) {
+            System.out.println("Cannot load the driver");
+            e.printStackTrace();
+        }
+        catch (SQLException e) {
+            System.out.println("Got a SQL exception.");
+            e.printStackTrace();
         }
     }
 }
