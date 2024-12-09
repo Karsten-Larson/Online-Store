@@ -258,3 +258,20 @@ INSERT INTO order_item (product_id, order_id, unit_price, quantity) VALUES
 	(13, 2, 799.99, 1),
 	(7, 3, 1.99, 4),
 	(9, 3, 199.99, 1);
+
+CREATE OR REPLACE FUNCTION set_product_in_stock_false() 
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.product_quantity = 0 THEN
+        NEW.product_in_stock := false;
+    END IF;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER set_product_in_stock_false
+AFTER UPDATE ON product
+FOR EACH ROW
+WHEN (NEW.product_quantity = 0)
+EXECUTE FUNCTION set_product_in_stock_false();
