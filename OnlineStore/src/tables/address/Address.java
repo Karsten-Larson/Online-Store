@@ -83,16 +83,17 @@ public class Address extends Table {
      * @param city city
      * @param state state
      * @param zipCode zip code or postal code
+     * @param country country
      * @param aptNumber apartment number
      * @param types list of the ways this address will be used
      * @return address object
      */
-    public static Address createAddress(String street, String city, String state, String zipCode, String aptNumber, List<AddressType> types) {
+    public static Address createAddress(String street, String city, String state, String zipCode, String country, String aptNumber, List<AddressType> types) {
         String insertQuery
-                = "INSERT INTO address (street, city, state, zip_code, apt_number) "
-                + "VALUES (?, ?, ?, ?, ?)";
+                = "INSERT INTO address (street, city, state, country, zip_code, apt_number) "
+                + "VALUES (?, ?, ?, ?, ?, ?)";
 
-        int id = insert(insertQuery, street, state, city, zipCode, aptNumber);
+        int id = insert(insertQuery, street, city, state, country, zipCode, aptNumber);
 
         String insertType
                 = "INSERT INTO address_relation (address_id, type) "
@@ -111,12 +112,13 @@ public class Address extends Table {
      * @param street street and building code
      * @param city city
      * @param state state
+     * @param country country
      * @param zipCode zip code or postal code
      * @param types list of the ways this address will be used
      * @return address object
      */
-    public static Address createAddress(String street, String city, String state, String zipCode, List<AddressType> types) {
-        return createAddress(street, city, state, zipCode, null, types);
+    public static Address createAddress(String street, String city, String state, String zipCode, String country, List<AddressType> types) {
+        return createAddress(street, city, state, zipCode, country, null, types);
     }
 
     public int getId() {

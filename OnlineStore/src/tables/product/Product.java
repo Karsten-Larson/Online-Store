@@ -1,138 +1,132 @@
 package tables.product;
 
 import java.sql.*;
-import java.util.Objects;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import tables.Table;
-import tables.DatabaseManager;
-import java.util.Scanner;
 
 /**
  * Class that manages all data related to the Product table.
- * 
+ *
  * @author Owen Sailer
  */
 public class Product extends Table {
+
+    private static final Map<Integer, Product> cache = new HashMap<>();
 
     private int id;
     private String name;
     private String description;
     private int quantity;
-    private boolean inStock;
     private double unitPrice;
-    private Integer distributorId;
+    private int distributorId;
+    private List<ProductType> categories;
+
+    protected Product(ResultSet rs) {
+        try {
+            id = rs.getInt("product_id");
+            name = rs.getString("product_name");
+            description = rs.getString("product_description");
+            quantity = rs.getInt("product_quantity");
+            unitPrice = rs.getDouble("current_unit_price");
+            distributorId = rs.getInt("distributor_id");
+
+            // Get categories
+            categories = new ArrayList<>();
+            do {
+                int id = rs.getInt("category_id");
+
+                // Value is null
+                if (id == 0) {
+                    break;
+                }
+
+                categories.add(ProductType.fromID(id));
+            } while (rs.next());
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex.getMessage());
+        }
+    }
+
+    /**
+     * Gets a Product from an ID
+     * @param id id
+     * @return Product
+     */
+    public static Product fromID(int id) {
+        if (cache.containsKey(id)) {
+            return cache.get(id);
+        }
+
+        String query
+                = "SELECT p.product_id, product_name, product_description, product_quantity, current_unit_price, distributor_id, pt.category_id "
+                + "FROM product p "
+                + "LEFT JOIN product_category pc ON pc.product_id = p.product_id "
+                + "LEFT JOIN product_type pt ON pt.category_id = pc.category_id "
+                + "WHERE p.product_id=?";
+
+        ResultSet rs = select(query, id);
+        Product result = new Product(rs);
+
+        cache.put(id, result);
+
+        return result;
+    }
+
+    /**
+     * Creates a new Product
+     * @param name name
+     * @param description description
+     * @param quantity quantity
+     * @param unitPrice unit price
+     * @param distributorId distributor id
+     * @return Product
+     */
+    public static Product createProduct(String name, String description, int quantity, double unitPrice, int distributorId) {
+        String insertQuery
+                = "INSERT INTO product (product_name, product_description, product_quantity, current_unit_price, distributor_id) "
+                + "VALUES (?, ?, ?, ?, ?)";
+
+        int id = insert(insertQuery, name, description, quantity, unitPrice, distributorId);
+
+        return fromID(id);
+    }
     
-    public Product(String string, int aInt) { }
-    
-    public Product(int id, String name, String description, int quantity, double unitPrice, Integer distributorId) {
-        this.id = id;
-        this.name = name;
-        this.description = description;
-        this.quantity = quantity;
-        this.inStock = quantity > 0;
-        this.unitPrice = unitPrice;
-        this.distributorId = distributorId;
-    }
-
-    public int addProduct() throws SQLException {
-        String insertProduct = "INSERT INTO product (product_name, product_description, product_quantity, product_in_stock, current_unit_price, distributor_id) "
-                             + "VALUES (?, ?, ?, ?, ?, ?)";
-
-        PreparedStatement stmt = DatabaseManager.getConnection().prepareStatement(insertProduct);
-
-        Scanner scanner = new Scanner(System.in);
-
-        System.out.print("Enter product name: ");
-        String newproductName = scanner.nextLine();
-
-        System.out.print("Enter product description: ");
-        String newproductDescription = scanner.nextLine();
-
-        System.out.print("Enter product quantity: ");
-        int newproductQuantity = scanner.nextInt();
-
-        boolean newproductInStock = (newproductQuantity != 0);
-
-        System.out.print("Enter current unit price: ");
-        double newunitPrice = scanner.nextDouble();
-
-        System.out.print("Enter distributor ID: ");
-        int newdistributorId = scanner.nextInt();
-
-        stmt.setString(1, newproductName);
-        stmt.setString(2, newproductDescription);
-        stmt.setInt(3, newproductQuantity);
-        stmt.setBoolean(4, newproductInStock);
-        stmt.setDouble(5, newunitPrice);
-        stmt.setInt(6, newdistributorId);
-
-        int count = stmt.executeUpdate();
-
-        return count;
-    }
-
-
-    public int removeProduct(int productId) throws SQLException {
-        String deleteProduct = "DELETE FROM product WHERE product_id = ?";
-
-        PreparedStatement stmt = DatabaseManager.getConnection().prepareStatement(deleteProduct);
-        stmt.setInt(1, productId);
-
-        int count = stmt.executeUpdate();
-        return count;
-    }
-
-    public int updateProduct(int productId) throws SQLException {
-        String updateProduct = "UPDATE product SET "
-                + "product_name = ?, "
-                + "product_description = ?, "
-                + "product_quantity = ?, "
-                + "current_unit_price = ?, "
-                + "distributor_id = ? "
-                + "WHERE product_id = ?";
+    /**
+     * Deletes the order and all its associated items
+     */
+    public void deleteProduct() {
+        throw new UnsupportedOperationException("This method is not implemented yet. PriceChange object must exist first");
         
-        PreparedStatement stmt = DatabaseManager.getConnection().prepareStatement(updateProduct);
-
-        Scanner scan = new Scanner(System.in);
-        System.out.print("Enter new product name: ");
-        String productname = scan.nextLine();
-        System.out.print("Enter new product description: ");
-        String productdescription = scan.nextLine();
-        System.out.print("Enter new product quantity: ");
-        int productquantity = scan.nextInt();
-        System.out.print("Enter new unit price: ");
-        double productunitPrice = scan.nextDouble();
-        System.out.print("Enter new distributor ID: ");
-        int productdistributorId = scan.nextInt();
-
-        stmt.setString(1, productname);
-        stmt.setString(2, productdescription);
-        stmt.setInt(3, productquantity);
-        stmt.setDouble(4, productunitPrice);
-        stmt.setInt(5, productdistributorId);
-        stmt.setInt(6, productId); 
-
-        return stmt.executeUpdate();
+//        clearCategories();
+//        
+//        String query 
+//                = "DELETE FROM product " 
+//                + "WHERE product_id=?";
+//        
+//        delete(query, id);
     }
 
-
-    public int getProductId() {
+    public int getID() {
         return id;
     }
 
-    public String getProductName() {
+    public String getName() {
         return name;
     }
 
-    public String getProductDescription() {
+    public String getDescription() {
         return description;
     }
 
-    public int getProductQuantity() {
+    public int getQuantity() {
         return quantity;
     }
 
-    public boolean isProductInStock() {
-        return inStock;
+    public boolean isInStock() {
+        return quantity > 0;
     }
 
     public double getCurrentUnitPrice() {
@@ -142,11 +136,15 @@ public class Product extends Table {
     public Integer getDistributorId() {
         return distributorId;
     }
-    
+
+    public List<ProductType> getCategories() {
+        return new ArrayList<>(categories);
+    }
+
     public void setUnitPrice(double unitPrice) throws SQLException {
         String query = "UPDATE product "
-                     + "SET current_unit_price=? "
-                     + "WHERE product_id=?";
+                + "SET current_unit_price=? "
+                + "WHERE product_id=?";
 
         update(query, unitPrice, id);
 
@@ -154,20 +152,21 @@ public class Product extends Table {
     }
 
     public void setQuantity(int quantity) throws SQLException {
-        String query = "UPDATE product "
-                     + "SET product_quantity=? "
-                     + "WHERE product_id=?";
+        String query
+                = "UPDATE product "
+                + "SET product_quantity=? "
+                + "WHERE product_id=?";
 
         update(query, quantity, id);
 
         this.quantity = quantity;
-        this.inStock = quantity > 0;
     }
 
     public void setName(String name) throws SQLException {
-        String query = "UPDATE product "
-                     + "SET product_name=? "
-                     + "WHERE product_id=?";
+        String query
+                = "UPDATE product "
+                + "SET product_name=? "
+                + "WHERE product_id=?";
 
         update(query, name, id);
 
@@ -175,9 +174,10 @@ public class Product extends Table {
     }
 
     public void setDescription(String description) throws SQLException {
-        String query = "UPDATE product "
-                     + "SET product_description=? "
-                     + "WHERE product_id=?";
+        String query
+                = "UPDATE product "
+                + "SET product_description=? "
+                + "WHERE product_id=?";
 
         update(query, description, id);
 
@@ -185,48 +185,100 @@ public class Product extends Table {
     }
 
     public void setDistributorId(Integer distributorId) throws SQLException {
-        String query = "UPDATE product "
-                     + "SET distributor_id=? "
-                     + "WHERE product_id=?";
+        String query
+                = "UPDATE product "
+                + "SET distributor_id=? "
+                + "WHERE product_id=?";
 
         update(query, distributorId, id);
 
         this.distributorId = distributorId;
     }
 
-    public void setInStock(boolean inStock) throws SQLException {
-        String query = "UPDATE product "
-                     + "SET product_in_stock=? "
-                     + "WHERE product_id=?";
+    /**
+     * Adds a category to the product
+     *
+     * @param name category name
+     */
+    public void addCategory(String name) {
+        ProductType result;
 
-        update(query, inStock, id);
+        try {
+            result = ProductType.fromName(name);
+        } catch (RuntimeException ex) {
+            result = ProductType.createProductType(name);
+        }
 
-        this.inStock = inStock;
+        addCategory(result);
     }
 
+    /**
+     * Adds a category to the product
+     *
+     * @param productType productType
+     */
+    public void addCategory(ProductType productType) {
+        String insertQuery
+                = "INSERT INTO product_category (product_id, category_id) "
+                + "VALUES (?, ?)";
+
+        insert(insertQuery, id, productType.getCategoryId());
+
+        categories.add(productType);
+    }
+
+    /**
+     * Removes a category from the product
+     *
+     * @param name product name
+     */
+    public void removeCategory(String name) {
+        ProductType result = ProductType.fromName(name);
+
+        removeCategory(result);
+    }
+
+    /**
+     * Removes a category from the product
+     *
+     * @param productType productType
+     */
+    public void removeCategory(ProductType productType) {
+        String deleteQuery
+                = "DELETE FROM product_category "
+                + "WHERE product_id=? "
+                + "AND category_id=?";
+
+        delete(deleteQuery, id, productType.getCategoryId());
+        categories.remove(productType);
+    }
+    
+    /**
+     * Removes all categories from an item
+     */
+    public void clearCategories() {
+        for (ProductType category: categories) {
+            removeCategory(category);
+        }
+    }
 
     @Override
     public String toString() {
-        return "Product{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", description='" + description + '\'' +
-                ", quantity=" + quantity +
-                ", inStock=" + inStock +
-                ", unitPrice=" + unitPrice +
-                ", distributorId=" + distributorId +
-                '}';
+        return "Product{" + "id=" + id + ", name=" + name + ", description=" + description + ", quantity=" + quantity + ", unitPrice=" + unitPrice + ", distributorId=" + distributorId + ", categories=" + categories + '}';
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof Product)) return false;
-        Product other = (Product) o;
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final Product other = (Product) obj;
         return this.id == other.id;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
     }
 }
