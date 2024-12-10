@@ -7,7 +7,7 @@ import java.sql.*;
  *
  * @author karsten
  */
-public class DatabaseManager {
+class DatabaseManager {
 
     private static final String URL = "jdbc:postgresql://localhost:5432/onlinestore";
     private static final String USERNAME = "postgres";

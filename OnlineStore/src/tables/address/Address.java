@@ -271,13 +271,18 @@ public class Address extends Table {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof Address)) {
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
             return false;
         }
-
-        Address oAddress = (Address) o;
-
-        return oAddress.addressId == addressId;
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final Address other = (Address) obj;
+        return this.addressId == other.addressId;
     }
+
 }

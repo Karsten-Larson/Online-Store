@@ -260,7 +260,7 @@ public class Order extends Table {
      * @param quantity quantity of product
      */
     public void addItem(Product product, int quantity) {
-        OrderItem orderItem = OrderItem.createOrder(orderId, product.getProductId(), product.getProductQuantity(), quantity);
+        OrderItem orderItem = OrderItem.createOrder(orderId, product, quantity);
 
         items.add(orderItem);
     }
@@ -297,7 +297,7 @@ public class Order extends Table {
     public boolean removeItem(Product product) {
         List<Integer> ids = items.stream().map(e -> e.getProductId()).collect(Collectors.toList());
 
-        int productId = product.getProductId();
+        int productId = product.getID();
 
         if (ids.contains(productId)) {
             OrderItem orderItem = items.get(ids.indexOf(productId));
@@ -321,4 +321,18 @@ public class Order extends Table {
         return "Order{" + "orderId=" + orderId + ", customerId=" + customerId + ", paymentId=" + paymentId + ", orderDate=" + orderDate + ", shippingId=" + shippingId + ", status=" + status + ", items=" + items + '}';
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final Order other = (Order) obj;
+        return this.orderId == other.orderId;
+    }
 }

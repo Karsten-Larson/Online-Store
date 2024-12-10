@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import tables.Table;
+import tables.product.Product;
 
 /**
  * Class that manages all data related to the order item table
@@ -33,6 +34,8 @@ class OrderItem extends Table {
             productId = rs.getInt("product_id");
             unitPrice = rs.getDouble("unit_price");
             quantity = rs.getInt("quantity");
+            
+            
         } catch (SQLException ex) {
             throw new RuntimeException(ex.getMessage());
         }
@@ -64,7 +67,7 @@ class OrderItem extends Table {
      * @param quantity quantity
      * @return OrderItem instance
      */
-    public static OrderItem createOrder(int orderId, int productId, int unitPrice, int quantity) {
+    public static OrderItem createOrder(int orderId, int productId, double unitPrice, int quantity) {
         String insertQuery
                 = "INSERT INTO order_item (order_id, product_id, unit_price, quantity) "
                 + "VALUES (?, ?, ?, ?)";
@@ -72,6 +75,18 @@ class OrderItem extends Table {
         int id = updateRow(insertQuery, orderId, productId, unitPrice, quantity);
 
         return fromID(id);
+    }
+
+    /**
+     * Method that create a new OrderItem in the database
+     *
+     * @param orderId order id
+     * @param prodcut product
+     * @param quantity quantity
+     * @return OrderItem instance
+     */
+    public static OrderItem createOrder(int orderId, Product product, int quantity) {
+        return createOrder(orderId, product.getID(), product.getCurrentUnitPrice(), quantity);
     }
 
     public int getOrderItemId() {
@@ -145,6 +160,21 @@ class OrderItem extends Table {
     @Override
     public String toString() {
         return "OrderItem{" + "orderItemId=" + orderItemId + ", orderId=" + orderId + ", productId=" + productId + ", unitPrice=" + unitPrice + ", quantity=" + quantity + '}';
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final OrderItem other = (OrderItem) obj;
+        return this.orderItemId == other.orderItemId;
     }
 
 }
