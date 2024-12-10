@@ -1,5 +1,6 @@
 package onlinestore;
 
+import tables.address.Address;
 import tables.order.Order;
 
 /**
@@ -17,7 +18,17 @@ public class OnlineStore {
         This file will be changing until the final objects are finalized.
         It's okay to delete this stuff 
          */
-        Order o = Order.fromID(1);
-        System.out.println(o);
+        Address a = Address.fromID(1);
+        System.out.println(a);
+        a.setCity("St. Paul");
+        a.setState("Minnesota");
+        System.out.println(a);
+//        Order o = Order.fromID(1);
+//        System.out.println(o);
+//        o.deleteOrder();
+//        System.out.println(o);
+//        if (o.removeItem()) {
+//            System.out.println(o);
+//        }
     }
 }

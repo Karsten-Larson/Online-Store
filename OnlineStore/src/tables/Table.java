@@ -1,5 +1,7 @@
 package tables;
 
+import java.io.Closeable;
+import java.nio.channels.ClosedChannelException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -12,7 +14,9 @@ import java.util.function.Function;
  *
  * @author karsten
  */
-public abstract class Table {
+public abstract class Table implements Closeable {
+
+    private boolean closed = false;
 
     private static void setArguments(PreparedStatement ps, Object[] arguments) throws SQLException {
         // Adds all arguments to the query
@@ -83,7 +87,8 @@ public abstract class Table {
         return result;
     }
 
-    protected static int update(String query, Object... arguments) {
+    protected int update(String query, Object... arguments) {
+        checkClosed();
         Connection conn = DatabaseManager.getConnection();
 
         try {
@@ -100,7 +105,7 @@ public abstract class Table {
         }
     }
 
-    protected static int updateRow(String query, Object... arguments) {
+    protected static int insert(String query, Object... arguments) {
         Connection conn = DatabaseManager.getConnection();
 
         try {
@@ -125,5 +130,48 @@ public abstract class Table {
             // Major error
             throw new RuntimeException(ex.getMessage());
         }
+    }
+    
+    protected void delete(String query, Object... arguments) {
+        checkClosed();
+        Connection conn = DatabaseManager.getConnection();
+
+        try {
+            PreparedStatement ps = conn.prepareStatement(query);
+
+            // Adds all arguments to the query
+            setArguments(ps, arguments);
+
+            // Execute the update query
+            int rowsAffected = ps.executeUpdate();
+
+            if (rowsAffected != 1) {
+                throw new IllegalArgumentException("More than one entity was updated/inserted");
+            }
+
+        } catch (SQLException ex) {
+            // Major error
+            throw new RuntimeException(ex.getMessage());
+        }
+        
+        close();
+    }
+
+    public boolean isOpen() {
+        return !closed;
+    }
+
+    public boolean isClose() {
+        return closed;
+    }
+
+    private void checkClosed() {
+        if (closed) {
+            throw new RuntimeException("This row/entity is already closed");
+        }
+    }
+
+    public void close() {
+        closed = true;
     }
 }

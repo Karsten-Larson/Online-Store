@@ -23,6 +23,7 @@ public class Address extends Table {
     private String city;
     private String state;
     private String zipCode;
+    private String country;
     private String apartmentNumber;
     private List<AddressType> types;
 
@@ -38,6 +39,7 @@ public class Address extends Table {
             city = rs.getString("city");
             state = rs.getString("state");
             zipCode = rs.getString("zip_code");
+            country = rs.getString("country");
             apartmentNumber = rs.getString("apt_number");
 
             types = new ArrayList<>();
@@ -61,7 +63,7 @@ public class Address extends Table {
         }
 
         String query
-                = "SELECT a.address_id, street, city, state, zip_code, apt_number, type FROM address a "
+                = "SELECT a.address_id, street, city, state, zip_code, apt_number, country, type FROM address a "
                 + "INNER JOIN address_relation ar "
                 + "ON a.address_id = ar.address_id "
                 + "WHERE a.address_id = ?";
@@ -90,14 +92,14 @@ public class Address extends Table {
                 = "INSERT INTO address (street, city, state, zip_code, apt_number) "
                 + "VALUES (?, ?, ?, ?, ?)";
 
-        int id = updateRow(insertQuery, street, state, city, zipCode, aptNumber);
+        int id = insert(insertQuery, street, state, city, zipCode, aptNumber);
 
         String insertType
                 = "INSERT INTO address_relation (address_id, type) "
                 + "VALUES (?, Cast(? AS address_type))";
 
         for (AddressType type : types) {
-            update(insertType, id, type.name().toLowerCase());
+            insert(insertType, id, type.name().toLowerCase());
         }
 
         return fromID(id);
@@ -201,6 +203,22 @@ public class Address extends Table {
         this.apartmentNumber = apartmentNumber;
     }
 
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        String query
+                = "UPDATE address "
+                + "SET country=? "
+                + "WHERE address_id=?;";
+
+        // Run the update
+        update(query, apartmentNumber, addressId);
+
+        this.country = country;
+    }
+
     public List<AddressType> getTypes() {
         return new ArrayList<>(types);
     }
@@ -267,7 +285,7 @@ public class Address extends Table {
 
     @Override
     public String toString() {
-        return "Address{" + "id=" + addressId + ", street=" + street + ", city=" + city + ", state=" + state + ", zipCode=" + zipCode + ", apartmentNumber=" + apartmentNumber + ", types=" + types + '}';
+        return "Address{" + "id=" + addressId + ", street=" + street + ", city=" + city + ", state=" + state + ", zipCode=" + zipCode + ", country=" + country + ", apartmentNumber=" + apartmentNumber + ", types=" + types + '}';
     }
 
     @Override
