@@ -93,7 +93,7 @@ public class Order extends Table {
                 = "INSERT INTO customer_order (customer_id, payment_id, shipping_id, order_status, order_date) "
                 + "VALUES (?, ?, ?, Cast(? as order_status), ?)";
 
-        int id = updateRow(insertQuery, customerId, paymentId, shippingId, status.name().toLowerCase(), orderDate);
+        int id = insert(insertQuery, customerId, paymentId, shippingId, status.name().toLowerCase(), orderDate);
 
         return fromID(id);
     }
@@ -112,7 +112,7 @@ public class Order extends Table {
                 = "INSERT INTO customer_order (customer_id, payment_id, shipping_id, order_status) "
                 + "VALUES (?, ?, ?, Cast(? as order_status))";
 
-        int id = updateRow(insertQuery, customerId, paymentId, shippingId, status.name().toLowerCase());
+        int id = insert(insertQuery, customerId, paymentId, shippingId, status.name().toLowerCase());
 
         return fromID(id);
     }
@@ -131,9 +131,22 @@ public class Order extends Table {
                 = "INSERT INTO customer_order (customer_id, payment_id, shipping_id, order_date) "
                 + "VALUES (?, ?, ?, ?)";
 
-        int id = updateRow(insertQuery, customerId, paymentId, shippingId, orderDate);
+        int id = insert(insertQuery, customerId, paymentId, shippingId, orderDate);
 
         return fromID(id);
+    }
+    
+    /**
+     * Deletes the order and all its associated items
+     */
+    public void deleteOrder() {
+        clearItems();
+        
+        String query 
+                = "DELETE FROM customer_order "
+                + "WHERE order_id = ?";
+        
+        delete(query, orderId);
     }
 
     public int getOrderId() {
@@ -242,12 +255,8 @@ public class Order extends Table {
      * Deletes all items from the order
      */
     public void clearItems() {
-        for (OrderItem orderItem : items) {
-            String query
-                    = "DELETE FROM order_item "
-                    + "WHERE order_item_id=?";
-
-            update(query, orderItem.getOrderItemId());
+        for (OrderItem item : items) {
+            item.deleteItem();
         }
 
         items = new ArrayList<>();
@@ -260,7 +269,7 @@ public class Order extends Table {
      * @param quantity quantity of product
      */
     public void addItem(Product product, int quantity) {
-        OrderItem orderItem = OrderItem.createOrder(orderId, product, quantity);
+        OrderItem orderItem = OrderItem.createItem(orderId, product, quantity);
 
         items.add(orderItem);
     }
@@ -277,12 +286,7 @@ public class Order extends Table {
 
         OrderItem orderItem = OrderItem.fromID(items.getLast().getOrderItemId());
 
-        String query
-                = "DELETE FROM order_item "
-                + "WHERE order_item_id=?";
-
-        update(query, orderItem.getOrderItemId());
-
+        orderItem.deleteItem();
         items.remove(orderItem);
 
         return true;
@@ -302,11 +306,7 @@ public class Order extends Table {
         if (ids.contains(productId)) {
             OrderItem orderItem = items.get(ids.indexOf(productId));
 
-            String query
-                    = "DELETE FROM order_item "
-                    + "WHERE order_item_id=?";
-
-            update(query, orderItem.getOrderItemId());
+            orderItem.deleteItem();
 
             items.remove(ids.indexOf(productId));
 

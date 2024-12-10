@@ -67,12 +67,12 @@ class OrderItem extends Table {
      * @param quantity quantity
      * @return OrderItem instance
      */
-    public static OrderItem createOrder(int orderId, int productId, double unitPrice, int quantity) {
+    public static OrderItem createItem(int orderId, int productId, double unitPrice, int quantity) {
         String insertQuery
                 = "INSERT INTO order_item (order_id, product_id, unit_price, quantity) "
                 + "VALUES (?, ?, ?, ?)";
 
-        int id = updateRow(insertQuery, orderId, productId, unitPrice, quantity);
+        int id = insert(insertQuery, orderId, productId, unitPrice, quantity);
 
         return fromID(id);
     }
@@ -85,8 +85,19 @@ class OrderItem extends Table {
      * @param quantity quantity
      * @return OrderItem instance
      */
-    public static OrderItem createOrder(int orderId, Product product, int quantity) {
-        return createOrder(orderId, product.getID(), product.getCurrentUnitPrice(), quantity);
+    public static OrderItem createItem(int orderId, Product product, int quantity) {
+        return OrderItem.createItem(orderId, product.getID(), product.getCurrentUnitPrice(), quantity);
+    }
+    
+    /**
+     * Deletes an order item from the database
+     */
+     public void deleteItem() {
+        String query 
+                = "DELETE FROM order_item "
+                + "WHERE order_item_id = ?";
+        
+        delete(query, orderItemId);
     }
 
     public int getOrderItemId() {

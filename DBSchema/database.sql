@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS address (
     street VARCHAR(100) NOT NULL,
     city VARCHAR(50) NOT NULL,
     state VARCHAR(50) NOT NULL,
+	country VARCHAR(50) NOT NULL DEFAULT 'USA',
     zip_code VARCHAR(10) NOT NULL,
     apt_number VARCHAR(20)
 );
@@ -124,7 +125,7 @@ CREATE TABLE IF NOT EXISTS order_item (
     quantity INT NOT NULL,
     FOREIGN KEY (product_id) REFERENCES product (product_id),
     FOREIGN KEY (order_id) REFERENCES customer_order (order_id),
-    CONSTRAINT UNIQUE (order_id, product_id)
+    UNIQUE (order_id, product_id)
 );
 
 CREATE TABLE IF NOT EXISTS wishlist(
@@ -236,7 +237,8 @@ INSERT INTO wishlist_items(wishlist_id,product_id,quantity) VALUES
 	(1,2,1), --Laptop
 	(2,3,2), --Sofa
 	(3,7,1), --Banana
-	(2,4,3); -- Tshirt
+	(2,4,3), -- Tshirt
+	(2,1,2); --Smartphone
 
 INSERT INTO payment_info(customer_id, billing_address_id, firstname, lastname, card_number, exp_date, cvv)
 VALUES
