@@ -136,10 +136,10 @@ CREATE TABLE IF NOT EXISTS wishlist(
 );
 
 CREATE TABLE IF NOT EXISTS wishlist_items(
+	wishlist_item_id SERIAL PRIMARY KEY,
 	wishlist_id int,
 	product_id int,
 	quantity INT NOT NULL,
-	PRIMARY KEY (wishlist_id, product_id),
 	FOREIGN KEY (wishlist_id) REFERENCES wishlist(wishlist_id),
 	FOREIGN KEY (product_id) REFERENCES product(product_id)
 );
@@ -278,3 +278,27 @@ AFTER UPDATE ON product
 FOR EACH ROW
 WHEN (NEW.product_quantity = 0)
 EXECUTE FUNCTION set_product_in_stock_false();
+
+
+CREATE OR REPLACE FUNCTION log_price_changes()
+  RETURNS TRIGGER 
+  LANGUAGE PLPGSQL
+  AS
+'
+BEGIN
+	IF NEW.current_unit_price <> OLD.current_unit_price THEN
+		 INSERT INTO product_price_change(product_id,new_product_price, old_product_price)
+		 			VALUES(OLD.product_id,NEW.current_unit_price, OLD.current_unit_price);
+	END IF;
+
+	RETURN NEW;
+END;
+';
+
+
+CREATE TRIGGER price_changes
+  BEFORE UPDATE
+  ON product
+  FOR EACH ROW
+  EXECUTE PROCEDURE log_price_changes();
+
