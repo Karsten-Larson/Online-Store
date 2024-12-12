@@ -1,8 +1,6 @@
 package onlinestore;
 
-import tables.product.Inventory;
-import tables.product.Product;
-import view.Utilities;
+import view.Menus;
 
 /**
  *
@@ -43,6 +41,13 @@ public class OnlineStore {
 //        //                Inventory.listAllProducts()
 //        );
 //        System.out.println(p);
-        System.out.println(Inventory.highestProductInStock());
+//        System.out.println(Inventory.highestProductInStock());
+        
+//        Distributor d = Distributor.fromID(1);
+//        System.out.println(d);
+//        Customer c = Customer.fromID(1);
+//        System.out.println(c);
+
+        Menus.homeMenu();
     }
 }

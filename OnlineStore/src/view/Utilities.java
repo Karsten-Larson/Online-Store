@@ -2,6 +2,8 @@ package view;
 
 import java.util.List;
 import java.util.Scanner;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -48,15 +50,68 @@ public class Utilities {
                 ((t) -> minValue <= t && t <= maxValue));
     }
 
-    public static <T> T selectItem(List<T> items, Function<T, String> map) {
+    public static void selectAction(List<String> names, List<Runnable> actions) {
+        if (names.size() != actions.size()) {
+            throw new IllegalArgumentException("Name must be one-to-one to actions");
+        }
+
+        int counter = 1;
+
+        for (String name : names) {
+            System.out.println(counter + ": " + name);
+            counter++;
+        }
+
+        actions.get(getInt("Select an action: ", 1, names.size()) - 1).run();
+    }
+    
+    public static <T> void selectAction(List<String> names, List<Consumer<T>> actions, T param) {
+        if (names.size() != actions.size()) {
+            throw new IllegalArgumentException("Name must be one-to-one to actions");
+        }
+
+        int counter = 1;
+
+        for (String name : names) {
+            System.out.println(counter + ": " + name);
+            counter++;
+        }
+
+        actions.get(getInt("Select an action: ", 1, names.size()) - 1).accept(param);
+    }
+    
+    public static <K, V> void selectAction(List<String> names, List<BiConsumer<K, V>> actions, K param1, V param2) {
+        if (names.size() != actions.size()) {
+            throw new IllegalArgumentException("Name must be one-to-one to actions");
+        }
+
+        int counter = 1;
+
+        for (String name : names) {
+            System.out.println(counter + ": " + name);
+            counter++;
+        }
+
+        actions.get(getInt("Select an action: ", 1, names.size()) - 1).accept(param1, param2);
+    }
+
+    public static <T> T selectItem(List<T> items, Function<T, String> map, String message) {
         int counter = 1;
 
         for (T item : items) {
             System.out.println(counter + ": " + map.apply(item));
             counter++;
         }
+        
+        int index = getInt(message, 0, items.size());
+        
+        if (index == 0) return null;
 
-        return items.get(getInt("Select an item: ", 1, items.size()) - 1);
+        return items.get(index - 1);
+    }
+
+    public static <T> T selectItem(List<T> items, Function<T, String> map) {
+        return selectItem(items, map, "Select an item: ");
     }
 
     public static <T> T selectItem(List<T> items) {

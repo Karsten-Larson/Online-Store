@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import tables.Table;
+import tables.distributor.Distributor;
 
 /**
  * Class that manages all data related to the Product table.
@@ -135,6 +136,10 @@ public class Product extends Table {
 
     public Integer getDistributorId() {
         return distributorId;
+    }
+    
+    public Distributor getDistributor() {
+        return Distributor.fromID(distributorId);
     }
 
     public List<ProductType> getCategories() {

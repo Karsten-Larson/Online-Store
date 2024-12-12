@@ -1,9 +1,13 @@
 package tables.distributor;
 
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import tables.Table;
+import tables.address.Address;
+import tables.product.Product;
 
 /**
  * Class that manages all data related to the Distributor table.
@@ -17,13 +21,26 @@ public class Distributor extends Table {
     private int id;
     private String phone;
     private int addressID;
+    private List<Product> products;
 
     protected Distributor(ResultSet rs) {
         try {
             id = rs.getInt("distributor_id");
-            phone = rs.getString("phone");
-            addressID= rs.getInt("address_id");
+            phone = rs.getString("distributor_phone");
+            addressID = rs.getInt("address_id");
 
+            // Get items
+            products = new ArrayList<>();
+            do {
+                int id = rs.getInt("product_id");
+
+                // Value is null
+                if (id == 0) {
+                    break;
+                }
+
+                products.add(Product.fromID(id));
+            } while (rs.next());
         } catch (SQLException ex) {
             throw new RuntimeException(ex.getMessage());
         }
@@ -41,8 +58,9 @@ public class Distributor extends Table {
         }
 
         String query
-                = "SELECT d.distributor_id, phone, address_id "
+                = "SELECT d.distributor_id, distributor_phone, address_id, p.product_id "
                 + "FROM distributor d "
+                + "LEFT JOIN product p ON p.distributor_id = d.distributor_id "
                 + "WHERE d.distributor_id=?";
 
         ResultSet rs = select(query, id);
@@ -62,7 +80,7 @@ public class Distributor extends Table {
      */
     public static Distributor createDistributor(String phone, int addressID) {
         String insertQuery
-                = "INSERT INTO Distributor (phone, address_id) "
+                = "INSERT INTO Distributor (distributor_phone, address_id) "
                 + "VALUES (?, ?)";
 
         int id = insert(insertQuery, phone, addressID);
@@ -97,6 +115,10 @@ public class Distributor extends Table {
         return addressID;
     }
 
+    public Address getAddress() {
+        return Address.fromID(addressID);
+    }
+
     public void setPhone(String phone) throws SQLException {
         String query = "UPDATE Distributor "
                 + "SET phone=? "
@@ -116,10 +138,14 @@ public class Distributor extends Table {
 
         this.addressID = addressID;
     }
+    
+    public List<Product> getProducts() {
+        return new ArrayList(products);
+    }
 
     @Override
     public String toString() {
-        return "Distributor{" + "id=" + id + ", phone=" + phone + "address_id= " + addressID + '}';
+        return "Distributor{" + "id=" + id + ", phone=" + phone + ", addressID=" + addressID + ", products=" + products + '}';
     }
 
     @Override
@@ -136,3 +162,4 @@ public class Distributor extends Table {
         final Distributor other = (Distributor) obj;
         return this.id == other.id;
     }
+}

@@ -176,6 +176,16 @@ public class Order extends Table {
     public int getPaymentId() {
         return paymentId;
     }
+    
+    public double getTotalPrice() {
+        double total = 0;
+        
+        for (OrderItem item: items) {
+            total += item.getUnitPrice() * item.getQuantity();
+        }
+        
+        return total;
+    }
 
     public List<OrderItem> getItems() {
         return new ArrayList<>(items);
