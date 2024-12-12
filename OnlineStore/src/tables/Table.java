@@ -86,6 +86,21 @@ public abstract class Table implements Closeable {
 
         return result;
     }
+    
+    protected static <T> List<T> mapIDs(ResultSet rs, Function<Integer, T> func) {
+        List<T> result = new ArrayList<>();
+
+        try {
+            do {
+                result.add(func.apply(rs.getInt(1)));
+            } while (rs.next());
+        } catch (SQLException ex) {
+            // Major error
+            throw new RuntimeException(ex.getMessage());
+        }
+
+        return result;
+    }
 
     protected int update(String query, Object... arguments) {
         checkClosed();

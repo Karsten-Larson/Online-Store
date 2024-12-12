@@ -17,11 +17,12 @@ public class Inventory extends Table {
      * @return all products
      */
     public static List<Product> listAllProducts() {
-        String query = "SELECT * FROM product";
+        String query
+                = "SELECT product_id FROM product p ";
 
         ResultSet rs = select(query);
 
-        return map(rs, Product::new);
+        return mapIDs(rs, Product::fromID);
     }
 
     /**
@@ -31,14 +32,13 @@ public class Inventory extends Table {
      */
     public static List<Product> listAllProductsInCustomerWishlist() {
         String query
-                = "SELECT p.product_id, product_name, product_description, product_quantity, current_unit_price, distributor_id FROM product p "
-                + "INNER JOIN wishlist_items wi ON p.product_id = wi.product_id "
-                + "GROUP BY p.product_id "
-                + "ORDER BY p.product_id";
+                = "SELECT DISTINCT p.product_id FROM product p "
+                + "LEFT JOIN product_category pc ON pc.product_id = p.product_id "
+                + "INNER JOIN wishlist_items wi ON p.product_id = wi.product_id";
 
         ResultSet rs = select(query);
 
-        return map(rs, Product::new);
+        return mapIDs(rs, Product::fromID);
     }
 
     /**
@@ -48,15 +48,13 @@ public class Inventory extends Table {
      */
     public static List<Product> listAllProductsInCustomerOrders() {
         String query
-                = "SELECT p.product_id, product_name, product_description, product_quantity, current_unit_price, distributor_id FROM product p "
+                = "SELECT DISTINCT p.product_id FROM product p "
                 + "INNER JOIN order_item oi ON p.product_id = oi.product_id "
-                + "INNER JOIN customer_order co ON oi.order_id = co.order_id "
-                + "GROUP BY p.product_id "
-                + "ORDER BY p.product_id";
+                + "INNER JOIN customer_order co ON oi.order_id = co.order_id";
 
         ResultSet rs = select(query);
 
-        return map(rs, Product::new);
+        return mapIDs(rs, Product::fromID);
     }
 
     /**
@@ -66,16 +64,15 @@ public class Inventory extends Table {
      */
     public static Product mostPurchasedProduct() {
         String query
-                = "SELECT p.product_id, product_name, product_description, product_quantity, current_unit_price, distributor_id, COUNT(oi.product_id) AS purchase_count FROM product p "
+                = "SELECT DISTINCT p.product_id, COUNT(oi.product_id) AS purchase_count FROM product p "
                 + "JOIN order_item oi ON p.product_id = oi.product_id "
                 + "GROUP BY p.product_id "
                 + "ORDER BY purchase_count DESC LIMIT 1";
 
-        ResultSet rs;
         try {
-            rs = select(query);
+            ResultSet rs = select(query);
 
-            return new Product(rs);
+            return mapIDs(rs, Product::fromID).get(0);
         } catch (RuntimeException ex) {
         }
 
@@ -91,13 +88,13 @@ public class Inventory extends Table {
      */
     public static List<Product> listAllProductsInPriceRange(double minPrice, double maxPrice) {
         String query
-                = "SELECT * FROM product "
+                = "SELECT p.product_id FROM product p "
                 + "WHERE current_unit_price BETWEEN ? AND ? "
                 + "ORDER BY current_unit_price, product_id";
 
         ResultSet rs = select(query, minPrice, maxPrice);
 
-        return map(rs, Product::new);
+        return mapIDs(rs, Product::fromID);
     }
 
     /**
@@ -108,13 +105,13 @@ public class Inventory extends Table {
      */
     public static List<Product> listAllProductsInCategory(int categoryId) {
         String query
-                = "SELECT p.* FROM product p "
+                = "SELECT p.product_id FROM product p "
                 + "INNER JOIN product_category pc ON p.product_id = pc.product_id "
                 + "WHERE pc.category_id = ?";
 
         ResultSet rs = select(query, categoryId);
 
-        return map(rs, Product::new);
+        return mapIDs(rs, Product::fromID);
     }
 
     /**
@@ -123,19 +120,29 @@ public class Inventory extends Table {
      * @return mot expensive product
      */
     public static Product mostExpensiveProduct() throws RuntimeException {
-        String query = "SELECT * FROM product ORDER BY current_unit_price DESC LIMIT 1";
+        String query = "SELECT product_id FROM product ORDER BY current_unit_price DESC LIMIT 1";
 
-        ResultSet rs = select(query);
+        try {
+            ResultSet rs = select(query);
 
-        return new Product(rs);
+            return mapIDs(rs, Product::fromID).get(0);
+        } catch (RuntimeException ex) {
+        }
+
+        return null;
     }
 
     // Find the highest product in stock (with the most quantity)
     public static Product highestProductInStock() throws RuntimeException {
-        String query = "SELECT * FROM product ORDER BY product_quantity DESC LIMIT 1";
+        String query = "SELECT product_id FROM product ORDER BY product_quantity DESC LIMIT 1";
 
-        ResultSet rs = select(query);
+        try {
+            ResultSet rs = select(query);
 
-        return new Product(rs);
+            return mapIDs(rs, Product::fromID).get(0);
+        } catch (RuntimeException ex) {
+        }
+
+        return null;
     }
 }
