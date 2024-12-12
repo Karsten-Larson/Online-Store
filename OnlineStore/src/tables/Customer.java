@@ -114,7 +114,7 @@ public class Customer extends Table {
     public void setFirstName(String fname) throws SQLException {
         String query = "UPDATE Customer "
                 + "SET firstname=? "
-                + "WHERE product_id=?";
+                + "WHERE customer_id=?";
 
         update(query, fname, id);
 
