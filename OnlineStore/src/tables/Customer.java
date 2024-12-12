@@ -69,7 +69,7 @@ public class Customer extends Table {
     public static Customer createCustomer(String fname, String lname, String email, String phone) {
         String insertQuery
                 = "INSERT INTO Customer (firstname, lastname, email_address, phone_number) "
-                + "VALUES (?, ?, ?, ?, ?)";
+                + "VALUES (?, ?, ?, ?)";
 
         int id = insert(insertQuery, fname, lname, email, phone);
 
