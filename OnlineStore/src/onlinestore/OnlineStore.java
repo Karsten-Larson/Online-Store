@@ -1,8 +1,8 @@
 package onlinestore;
 
-import tables.address.Address;
-import tables.order.Order;
+import tables.product.Inventory;
 import tables.product.Product;
+import view.Utilities;
 
 /**
  *
@@ -31,12 +31,18 @@ public class OnlineStore {
 //        if (o.removeItem()) {
 //            System.out.println(o);
 //        }
-
-        Product p = Product.fromID(2);
-        System.out.println(p);
-        p.deleteProduct();
+//        Product p = Product.fromID(2);
+//        System.out.println(p);
+//        p.deleteProduct();
 //        System.out.println(p);
 //        p.addCategory("Electronics");
 //        System.out.println(p);
+//            Utilities.getInt("Select an integer (1-5): ", 1, 5);
+//        Product p = Utilities.selectItem(
+//                Inventory.listAllProductsInCategory(1)
+//        //                Inventory.listAllProducts()
+//        );
+//        System.out.println(p);
+        System.out.println(Inventory.highestProductInStock());
     }
 }
