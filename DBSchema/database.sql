@@ -298,3 +298,4 @@ CREATE TRIGGER price_changes
   ON product
   FOR EACH ROW
   EXECUTE PROCEDURE log_price_changes();
+

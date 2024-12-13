@@ -13,6 +13,9 @@ import tables.wishlist.Wishlist;
 import tables.wishlist.WishlistItem;
 import view.Menu;
 import static view.Mappings.*;
+import tables.product.Inventory;
+import tables.product.Product;
+
 import view.Utilities;
 
 /**
@@ -61,12 +64,6 @@ public class OnlineStore {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-
-        /* 
-        This file will be changing until the final objects are finalized.
-        It's okay to delete this stuff 
-         */
-//        Menu menu = new Menu("Home Menu");
         Menu showProducts = new Menu<Void, Product>("Show Products") {
             @Override
             protected void performAction() {
@@ -459,5 +456,6 @@ public class OnlineStore {
                 //                .add(deleteDistributor)
                 .add(productRankings)
                 .run();
+
     }
 }

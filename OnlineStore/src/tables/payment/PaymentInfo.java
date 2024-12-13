@@ -30,6 +30,7 @@ public class PaymentInfo extends Table {
             firstName = rs.getString("firstname");
             lastName = rs.getString("lastname");
             cardNumber = rs.getInt("card_number");
+
             expDate = rs.getDate("exp_date");
             cvv = rs.getInt("cvv");
         } catch (SQLException ex) {
@@ -211,5 +212,4 @@ public class PaymentInfo extends Table {
         final PaymentInfo other = (PaymentInfo) obj;
         return this.paymentId == other.paymentId;
     }
-
 }
