@@ -44,7 +44,13 @@ public class Address extends Table {
 
             types = new ArrayList<>();
             do {
-                types.add(AddressType.valueOf(rs.getString("type").toUpperCase()));
+                String type = rs.getString("type");
+                
+                if (type == null) {
+                    break;
+                }
+                
+                types.add(AddressType.valueOf(type.toUpperCase()));
             } while (rs.next());
         } catch (SQLException ex) {
             throw new RuntimeException(ex.getMessage());
@@ -64,8 +70,7 @@ public class Address extends Table {
 
         String query
                 = "SELECT a.address_id, street, city, state, zip_code, apt_number, country, type FROM address a "
-                + "INNER JOIN address_relation ar "
-                + "ON a.address_id = ar.address_id "
+                + "LEFT JOIN address_relation ar ON a.address_id = ar.address_id "
                 + "WHERE a.address_id = ?";
 
         ResultSet rs = select(query, id);
@@ -216,7 +221,7 @@ public class Address extends Table {
                 + "WHERE address_id=?;";
 
         // Run the update
-        update(query, apartmentNumber, addressId);
+        update(query, country, addressId);
 
         this.country = country;
     }
@@ -267,12 +272,27 @@ public class Address extends Table {
             String query
                     = "INSERT INTO address_relation (type, address_id) "
                     + "VALUES "
-                    + " (Cast(? AS address_type), ?)";
+                    + "(Cast(? AS address_type), ?)";
 
             update(query, addyType.name().toLowerCase(), addressId);
         }
 
         this.types = new ArrayList(unqiueTypes);
+    }
+
+    public void addType(AddressType addressType) {
+        if (types.contains(addressType)) {
+            return;
+        }
+
+        String query
+                = "INSERT INTO address_relation (type, address_id) "
+                + "VALUES "
+                + "(Cast(? AS address_type), ?)";
+
+        update(query, addressType.name().toLowerCase(), addressId);
+        
+        types.add(addressType);
     }
 
     /**

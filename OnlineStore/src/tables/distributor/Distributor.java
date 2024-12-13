@@ -89,18 +89,37 @@ public class Distributor extends Table {
     }
 
     /**
+     * Creates a new Distributor
+     *
+     * @param phone phone number
+     * @param address address
+     * @return distributor
+     */
+    public static Distributor createDistributor(String phone, Address address) {
+        return createDistributor(phone, address.getId());
+    }
+    
+    public static List<Distributor> getAllDistributors() {
+        String query
+                = "SELECT distributor_id "
+                + "FROM Distributor ";
+
+        ResultSet rs = select(query);
+
+        return mapIDs(rs, Distributor::fromID);
+    }
+
+    /**
      * Deletes the Distributor
      */
     public void deleteDistributor() {
-        throw new UnsupportedOperationException("This method is not implemented yet.");
+        clearProducts();
 
-//        clearCategories();
-//
-//        String query
-//                = "DELETE FROM Distributor "
-//                + "WHERE customer_id=?";
-//
-//        delete(query, id);
+        String query
+                = "DELETE FROM Distributor "
+                + "WHERE customer_id=?";
+
+        delete(query, id);
     }
 
     public int getID() {
@@ -138,9 +157,27 @@ public class Distributor extends Table {
 
         this.addressID = addressID;
     }
-    
+
     public List<Product> getProducts() {
         return new ArrayList(products);
+    }
+
+    public void addProduct(String name, String description, int quantity, double price) {
+        Product p = Product.createProduct(name, description, quantity, price, id);
+
+        products.add(p);
+    }
+
+    public void removeProduct(Product product) {
+        product.deleteProduct();
+
+        products.remove(product);
+    }
+    
+    public void clearProducts() {
+        while (!products.isEmpty()) {
+            removeProduct(products.getFirst());
+        }
     }
 
     @Override

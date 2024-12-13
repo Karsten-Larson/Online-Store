@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import tables.address.Address;
 import tables.customer.Customer;
 import tables.order.Order;
 import tables.order.OrderItem;
@@ -23,7 +24,7 @@ public class Menus {
         List<Runnable> actions = new ArrayList<>();
 
         names.add("Customer View");
-        actions.add(Menus::customerView);
+        actions.add(() -> Menus.customerView(null));
         names.add("Distributor View");
         actions.add(Menus::distributorView);
         names.add("Create Customer");
@@ -36,9 +37,11 @@ public class Menus {
         Utilities.selectAction(names, actions);
     }
 
-    public static void customerView() {
-        Function<Customer, String> map = (c) -> c.getFirstName() + " " + c.getLastName();
-        Customer customer = Utilities.selectItem(Customer.getAllCustomers(), map, "Select a customer to login as (0 to exit): ");
+    public static void customerView(Customer customer) {
+        if (customer == null) {
+            Function<Customer, String> map = (c) -> c.getFirstName() + " " + c.getLastName();
+            customer = Utilities.selectItem(Customer.getAllCustomers(), map, "Select a customer to login as (0 to exit): ");
+        }
 
         if (customer == null) {
             homeMenu();
@@ -65,7 +68,7 @@ public class Menus {
         Product product = Utilities.selectItem(Inventory.listAllProducts(), map, "Select a product to view (0 to exit): ");
 
         if (product == null) {
-            customerView();
+            customerView(customer);
             return;
         }
 
@@ -99,8 +102,7 @@ public class Menus {
             customerDetailedViewProducts(customer, product);
         }
 
-        Function<Order, String> map = (o) -> "ID: " + o.getOrderId() + "; Total Price: " + o.getTotalPrice();
-        Order order = Utilities.selectItem(customer.getOrders(), map, "Select an order to add an item to (0 to exit): ");
+        Order order = Utilities.selectOrder(customer);
 
         if (order == null) {
             customerDetailedViewProducts(customer, product);
@@ -118,23 +120,51 @@ public class Menus {
     }
 
     public static void customerViewOrders(Customer customer) {
-        Function<Order, String> map = (o) -> "ID: " + o.getOrderId() + "; Total Price: " + o.getTotalPrice();
-        Order order = Utilities.selectItem(customer.getOrders(), map, "Select an order to view (0 to exit): ");
-
-        if (order == null) {
-            customerView();
+        List<Order> orders = customer.getOrders();
+        if (orders.isEmpty()) {
+            System.out.println("No orders available to view.");
+            customerView(customer);
             return;
         }
 
-        System.out.println("Order ID: " + order.getOrderId());
-        System.out.println("Order Date: " + order.getOrderDate());
-        System.out.println("Order Total Price: " + order.getTotalPrice());
-        System.out.println("Items");
-        for (OrderItem item : order.getItems()) {
-            System.out.println("- Name: " + item.getProduct().getName() + "; Quantity Ordered: " + item.getQuantity() + "; Unit Price: " + item.getUnitPrice());
+        Order order = Utilities.selectOrder(customer);
+
+        if (order == null) {
+            customerView(customer);
+            return;
         }
 
-        customerView();
+        customerViewOrder(order);
+
+        customerView(customer);
+    }
+
+    public static void customerViewOrder(Order order) {
+        System.out.println(Mappings.DETAILED_MAP_ORDER.apply(order));
+
+        List<String> names = new ArrayList<>();
+        List<Runnable> actions = new ArrayList<>();
+
+        names.add("Delete Item");
+        actions.add(() -> {
+            OrderItem item = Utilities.selectOrderItem(order);
+
+            if (item != null) {
+                order.removeItem(item);
+            }
+        });
+        names.add("Edit Quantity");
+        actions.add(() -> {
+            OrderItem item = Utilities.selectOrderItem(order);
+
+            if (item != null) {
+                Utilities.editOrderItemQuantity(item);
+            }
+        });
+        names.add("Exit");
+        actions.add(() -> System.out.println("Exiting..."));
+
+        Utilities.selectAction(names, actions);
     }
 
     public static void customerViewWishlists(Customer customer) {
@@ -146,10 +176,18 @@ public class Menus {
     }
 
     public static void createCustomer() {
-        throw new UnsupportedOperationException("This method is not implemented yet.");
+        if (Utilities.getConfirmation("Do you want to create a new customer (y/n): ")) {
+            Utilities.createCustomer();
+        }
+
+        homeMenu();
     }
 
     public static void createDistributor() {
-        throw new UnsupportedOperationException("This method is not implemented yet.");
+        if (Utilities.getConfirmation("Do you want to create a new distributor (y/n): ")) {
+            Utilities.createDistributor();
+        }
+
+        homeMenu();
     }
 }

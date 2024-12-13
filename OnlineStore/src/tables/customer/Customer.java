@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import tables.Table;
 import tables.order.Order;
+import tables.order.OrderStatus;
+import tables.wishlist.Wishlist;
 
 /**
  * Class that manages all data related to the Customer table.
@@ -23,7 +25,7 @@ public class Customer extends Table {
     private String phone;
     private String email;
     private List<Order> orders;
-//    private List<Wishlist> wishlists;
+    private List<Wishlist> wishlists;
 
     protected Customer(ResultSet rs) {
         try {
@@ -35,28 +37,31 @@ public class Customer extends Table {
 
             // Get items
             orders = new ArrayList<>();
+            wishlists = new ArrayList<>();
+
             do {
-                int id = rs.getInt("order_id");
+                int orderId = rs.getInt("order_id");
+                int wishlistId = rs.getInt("wishlist_id");
 
                 // Value is null
-                if (id == 0) {
-                    break;
+                if (orderId != 0) {
+                    Order order = Order.fromID(orderId);
+
+                    if (!orders.contains(order)) {
+                        orders.add(order);
+                    }
                 }
 
-                orders.add(Order.fromID(id));
+                if (wishlistId != 0) {
+                    Wishlist wishlist = Wishlist.fromID(wishlistId);
+
+                    if (!wishlists.contains(wishlist)) {
+                        wishlists.add(wishlist);
+                    }
+                }
+
             } while (rs.next());
 
-//            wishlists = new ArrayList<>();
-//            do {
-//                int id = rs.getInt("wishlist_id");
-//
-//                // Value is null
-//                if (id == 0) {
-//                    break;
-//                }
-//
-//                wishlists.add(Wishlist.fromID(id));
-//            } while (rs.next());
         } catch (SQLException ex) {
             throw new RuntimeException(ex.getMessage());
         }
@@ -111,24 +116,34 @@ public class Customer extends Table {
      * Deletes the Customer
      */
     public void deleteCustomer() {
-        throw new UnsupportedOperationException("This method is not implemented yet.");
+        clearOrders();
+        clearWishlists();
 
-//        clearCategories();
-//
-//        String query
-//                = "DELETE FROM Customer "
-//                + "WHERE customer_id=?";
-//
-//        delete(query, id);
+        String query
+                = "DELETE FROM Customer "
+                + "WHERE customer_id=?";
+
+        delete(query, id);
     }
     
+    public void clearOrders() {
+        while (!orders.isEmpty()) {
+            removeOrder(orders.getLast());
+        }
+    }
+    public void clearWishlists() {
+        while (!wishlists.isEmpty()) {
+            removeWishlist(wishlists.getFirst());
+        }
+    }
+
     public static List<Customer> getAllCustomers() {
         String query
                 = "SELECT c.customer_id "
                 + "FROM customer c ";
-        
+
         ResultSet rs = select(query);
-        
+
         return mapIDs(rs, Customer::fromID);
     }
 
@@ -196,13 +211,34 @@ public class Customer extends Table {
     public List<Order> getOrders() {
         return new ArrayList<>(orders);
     }
+    
+    public void addOrder(int paymentId, int shippingId, OrderStatus status) {
+        orders.add(Order.createOrder(id, paymentId, shippingId, status));
+    }
+    
+    public void removeOrder(Order order) {
+        orders.remove(order);
+        
+        order.deleteOrder();
+    }
 
-//    public List<Order> getWishlists() {
-//        return new ArrayList<>(wishlists);
-//    }
+    public List<Wishlist> getWishlists() {
+        return new ArrayList<>(wishlists);
+    }
+    
+    public void addWishlist(String name) {
+        wishlists.add(Wishlist.createWishlist(id, name));
+    }
+    
+    public void removeWishlist(Wishlist wishlist) {
+        wishlists.remove(wishlist);
+        
+        wishlist.deleteWishlist();
+    }
+
     @Override
     public String toString() {
-        return "Customer{" + "id=" + id + ", firstname=" + firstname + ", lastname=" + lastname + ", phone=" + phone + ", email=" + email + ", orders=" + orders + '}';
+        return "Customer{" + "id=" + id + ", firstname=" + firstname + ", lastname=" + lastname + ", phone=" + phone + ", email=" + email + ", orders=" + orders + ", wishlists=" + wishlists + '}';
     }
 
     @Override

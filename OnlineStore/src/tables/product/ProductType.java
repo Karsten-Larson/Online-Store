@@ -2,6 +2,7 @@ package tables.product;
 
 import java.sql.*;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import tables.Table;
 
@@ -46,6 +47,25 @@ public class ProductType extends Table {
         cache.put(id, result);
 
         return result;
+    }
+    
+    public static List<ProductType> getAllProductTypes() {
+        String query
+                = "SELECT category_id "
+                + "FROM product_type ";
+
+        ResultSet rs = select(query);
+
+        return mapIDs(rs, ProductType::fromID);
+    }
+    
+    public void removeProductType(int id) {
+        String deleteQuery
+                = "DELETE FROM product_category "
+                + "WHERE product_id=? "
+                + "AND category_id=?";
+
+        delete(deleteQuery, id, categoryId);
     }
 
     /**
