@@ -1,9 +1,14 @@
 package tables.customer;
 
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import tables.Table;
+import tables.order.Order;
+import tables.order.OrderStatus;
+import tables.wishlist.Wishlist;
 
 /**
  * Class that manages all data related to the Customer table.
@@ -19,6 +24,8 @@ public class Customer extends Table {
     private String lastname;
     private String phone;
     private String email;
+    private List<Order> orders;
+    private List<Wishlist> wishlists;
 
     protected Customer(ResultSet rs) {
         try {
@@ -27,6 +34,33 @@ public class Customer extends Table {
             lastname = rs.getString("lastname");
             email = rs.getString("email_address");
             phone = rs.getString("phone_number");
+
+            // Get items
+            orders = new ArrayList<>();
+            wishlists = new ArrayList<>();
+
+            do {
+                int orderId = rs.getInt("order_id");
+                int wishlistId = rs.getInt("wishlist_id");
+
+                // Value is null
+                if (orderId != 0) {
+                    Order order = Order.fromID(orderId);
+
+                    if (!orders.contains(order)) {
+                        orders.add(order);
+                    }
+                }
+
+                if (wishlistId != 0) {
+                    Wishlist wishlist = Wishlist.fromID(wishlistId);
+
+                    if (!wishlists.contains(wishlist)) {
+                        wishlists.add(wishlist);
+                    }
+                }
+
+            } while (rs.next());
 
         } catch (SQLException ex) {
             throw new RuntimeException(ex.getMessage());
@@ -45,8 +79,10 @@ public class Customer extends Table {
         }
 
         String query
-                = "SELECT c.customer_id, firstname, lastname, email_address, phone_number "
+                = "SELECT c.customer_id, firstname, lastname, email_address, phone_number, co.order_id, w.wishlist_id "
                 + "FROM customer c "
+                + "LEFT JOIN customer_order co ON c.customer_id = co.customer_id "
+                + "LEFT JOIN wishlist w ON c.customer_id = w.customer_id "
                 + "WHERE c.customer_id=?";
 
         ResultSet rs = select(query, id);
@@ -80,15 +116,35 @@ public class Customer extends Table {
      * Deletes the Customer
      */
     public void deleteCustomer() {
-        throw new UnsupportedOperationException("This method is not implemented yet.");
+        clearOrders();
+        clearWishlists();
 
-//        clearCategories();
-//
-//        String query
-//                = "DELETE FROM Customer "
-//                + "WHERE customer_id=?";
-//
-//        delete(query, id);
+        String query
+                = "DELETE FROM Customer "
+                + "WHERE customer_id=?";
+
+        delete(query, id);
+    }
+    
+    public void clearOrders() {
+        while (!orders.isEmpty()) {
+            removeOrder(orders.getLast());
+        }
+    }
+    public void clearWishlists() {
+        while (!wishlists.isEmpty()) {
+            removeWishlist(wishlists.getFirst());
+        }
+    }
+
+    public static List<Customer> getAllCustomers() {
+        String query
+                = "SELECT c.customer_id "
+                + "FROM customer c ";
+
+        ResultSet rs = select(query);
+
+        return mapIDs(rs, Customer::fromID);
     }
 
     public int getID() {
@@ -139,9 +195,9 @@ public class Customer extends Table {
         update(query, email, id);
 
         this.email = email;
-    
-}
-    
+
+    }
+
     public void setPhone(String phone) throws SQLException {
         String query = "UPDATE Customer "
                 + "SET phone_number=? "
@@ -150,12 +206,39 @@ public class Customer extends Table {
         update(query, phone, id);
 
         this.phone = phone;
+    }
+
+    public List<Order> getOrders() {
+        return new ArrayList<>(orders);
+    }
     
-}
+    public void addOrder(int paymentId, int shippingId, OrderStatus status) {
+        orders.add(Order.createOrder(id, paymentId, shippingId, status));
+    }
     
+    public void removeOrder(Order order) {
+        orders.remove(order);
+        
+        order.deleteOrder();
+    }
+
+    public List<Wishlist> getWishlists() {
+        return new ArrayList<>(wishlists);
+    }
+    
+    public void addWishlist(String name) {
+        wishlists.add(Wishlist.createWishlist(id, name));
+    }
+    
+    public void removeWishlist(Wishlist wishlist) {
+        wishlists.remove(wishlist);
+        
+        wishlist.deleteWishlist();
+    }
+
     @Override
     public String toString() {
-        return "Customer{" + "id=" + id + ", name=" + firstname + " " + lastname + ", email=" + email + ", phone=" + phone + '}';
+        return "Customer{" + "id=" + id + ", firstname=" + firstname + ", lastname=" + lastname + ", phone=" + phone + ", email=" + email + ", orders=" + orders + ", wishlists=" + wishlists + '}';
     }
 
     @Override
@@ -172,3 +255,4 @@ public class Customer extends Table {
         final Customer other = (Customer) obj;
         return this.id == other.id;
     }
+}

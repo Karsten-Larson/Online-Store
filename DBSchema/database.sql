@@ -94,14 +94,12 @@ CREATE TYPE order_status AS ENUM ('pending', 'shipped', 'delivered');
 
 CREATE TABLE IF NOT EXISTS payment_info(
 	payment_id SERIAL PRIMARY KEY,
-	customer_id INT,
 	billing_address_id INT,
 	firstname VARCHAR(50) NOT NULL,
 	lastname VARCHAR(50) NOT NULL,
 	card_number INT NOT NULL,
 	exp_date DATE NOT NULL,
 	cvv INT NOT NULL,
-	FOREIGN KEY (customer_id) REFERENCES customer(customer_id),
 	FOREIGN KEY (billing_address_id) REFERENCES address (address_id)
 );
 
@@ -112,7 +110,6 @@ CREATE TABLE IF NOT EXISTS customer_order (
 	shipping_id INT NOT NULL,
 	order_status ORDER_STATUS NOT NULL DEFAULT('pending'),
 	order_date DATE NOT NULL DEFAULT now(),
-	FOREIGN KEY (customer_id) REFERENCES customer (customer_id),
 	FOREIGN KEY (payment_id) REFERENCES payment_info (payment_id),
 	FOREIGN KEY (shipping_id) REFERENCES Address(address_id)
 );
@@ -240,12 +237,12 @@ INSERT INTO wishlist_items(wishlist_id,product_id,quantity) VALUES
 	(2,4,3), -- Tshirt
 	(2,1,2); --Smartphone
 
-INSERT INTO payment_info(customer_id, billing_address_id, firstname, lastname, card_number, exp_date, cvv)
+INSERT INTO payment_info(billing_address_id, firstname, lastname, card_number, exp_date, cvv)
 VALUES
-	(1,1,'Karsten', 'Larson', 123778979, '2026-05-30',234),
-	(1,1,'Karsten', 'Larson', 768908764, '2029-10-30',008),
-	(2,4, 'Owen', 'Sailer', 123456788, '2030-11-30', 448),
-	(3,4, 'Patrick', 'Arbach', 556788976, '2023-09-30', 478);
+	(1,'Karsten', 'Larson', 123778979, '2026-05-30',234),
+	(1,'Karsten', 'Larson', 768908764, '2029-10-30',008),
+	(4, 'Owen', 'Sailer', 123456788, '2030-11-30', 448),
+	(4, 'Patrick', 'Arbach', 556788976, '2023-09-30', 478);
 
 INSERT INTO customer_order (customer_id, payment_id, shipping_id,
 	order_status)

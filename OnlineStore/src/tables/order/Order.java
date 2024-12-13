@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import tables.Table;
 import tables.address.Address;
+import tables.customer.Customer;
+import tables.payment.PaymentInfo;
 import tables.product.Product;
 
 /**
@@ -141,6 +143,7 @@ public class Order extends Table {
      */
     public void deleteOrder() {
         clearItems();
+        getPayment().deletePayment();
         
         String query 
                 = "DELETE FROM customer_order "
@@ -154,7 +157,7 @@ public class Order extends Table {
     }
 
     public Date getOrderDate() {
-        return orderDate;
+        return new Date(orderDate.getTime());
     }
 
     public int getShippingId() {
@@ -172,9 +175,27 @@ public class Order extends Table {
     public int getCustomerId() {
         return customerId;
     }
+    
+    public Customer getCustomer() {
+        return Customer.fromID(customerId);
+    }
 
     public int getPaymentId() {
         return paymentId;
+    }
+    
+    public PaymentInfo getPayment() {
+        return PaymentInfo.fromID(paymentId);
+    }
+    
+    public double getTotalPrice() {
+        double total = 0;
+        
+        for (OrderItem item: items) {
+            total += item.getUnitPrice() * item.getQuantity();
+        }
+        
+        return total;
     }
 
     public List<OrderItem> getItems() {
@@ -204,6 +225,10 @@ public class Order extends Table {
 
         this.shippingId = shippingId;
     }
+    
+    public void setShippingAddress(Address shippingAddress) {
+        setShippingId(shippingAddress.getId());
+    }
 
     public void setStatus(OrderStatus status) {
         String query
@@ -229,6 +254,10 @@ public class Order extends Table {
 
         this.customerId = customerId;
     }
+    
+    public void setCustomer(Customer customer) {
+        setCustomerId(customer.getID());
+    }
 
     public void setPaymentId(int paymentId) {
         String query
@@ -240,6 +269,10 @@ public class Order extends Table {
         update(query, paymentId, orderId);
 
         this.paymentId = paymentId;
+    }
+    
+    public void setPayment(PaymentInfo paymentInfo) {
+        setPaymentId(paymentInfo.getPaymentId());
     }
 
     /**
@@ -313,6 +346,16 @@ public class Order extends Table {
             return true;
         }
 
+        return false;
+    }
+    
+    public boolean removeItem(OrderItem orderItem) {
+        if (items.contains(orderItem)) {
+            orderItem.deleteItem();
+            items.remove(orderItem);
+            return true;
+        }
+        
         return false;
     }
 

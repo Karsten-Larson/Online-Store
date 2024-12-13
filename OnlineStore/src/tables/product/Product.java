@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import tables.Table;
+import tables.distributor.Distributor;
 
 /**
  * Class that manages all data related to the Product table.
@@ -52,6 +53,7 @@ public class Product extends Table {
 
     /**
      * Gets a Product from an ID
+     *
      * @param id id
      * @return Product
      */
@@ -77,6 +79,7 @@ public class Product extends Table {
 
     /**
      * Creates a new Product
+     *
      * @param name name
      * @param description description
      * @param quantity quantity
@@ -93,20 +96,20 @@ public class Product extends Table {
 
         return fromID(id);
     }
-    
+
     /**
      * Deletes the order and all its associated items
      */
     public void deleteProduct() {
-        throw new UnsupportedOperationException("This method is not implemented yet. PriceChange object must exist first");
+//        throw new UnsupportedOperationException("This method is not implemented yet. PriceChange object must exist first");
+
+        clearCategories();
         
-//        clearCategories();
-//        
-//        String query 
-//                = "DELETE FROM product " 
-//                + "WHERE product_id=?";
-//        
-//        delete(query, id);
+        String query = "DELETE FROM product_price_change WHERE product_id=?; "
+                + "DELETE FROM product "
+                + "WHERE product_id=?";
+        
+        deleteMultipleRows(query, id, id);
     }
 
     public int getID() {
@@ -137,11 +140,15 @@ public class Product extends Table {
         return distributorId;
     }
 
+    public Distributor getDistributor() {
+        return Distributor.fromID(distributorId);
+    }
+
     public List<ProductType> getCategories() {
         return new ArrayList<>(categories);
     }
 
-    public void setUnitPrice(double unitPrice) throws SQLException {
+    public void setUnitPrice(double unitPrice) {
         String query = "UPDATE product "
                 + "SET current_unit_price=? "
                 + "WHERE product_id=?";
@@ -151,7 +158,7 @@ public class Product extends Table {
         this.unitPrice = unitPrice;
     }
 
-    public void setQuantity(int quantity) throws SQLException {
+    public void setQuantity(int quantity) {
         String query
                 = "UPDATE product "
                 + "SET product_quantity=? "
@@ -162,7 +169,7 @@ public class Product extends Table {
         this.quantity = quantity;
     }
 
-    public void setName(String name) throws SQLException {
+    public void setName(String name) {
         String query
                 = "UPDATE product "
                 + "SET product_name=? "
@@ -173,7 +180,7 @@ public class Product extends Table {
         this.name = name;
     }
 
-    public void setDescription(String description) throws SQLException {
+    public void setDescription(String description) {
         String query
                 = "UPDATE product "
                 + "SET product_description=? "
@@ -184,7 +191,7 @@ public class Product extends Table {
         this.description = description;
     }
 
-    public void setDistributorId(Integer distributorId) throws SQLException {
+    public void setDistributorId(Integer distributorId) {
         String query
                 = "UPDATE product "
                 + "SET distributor_id=? "
@@ -244,22 +251,18 @@ public class Product extends Table {
      * @param productType productType
      */
     public void removeCategory(ProductType productType) {
-        String deleteQuery
-                = "DELETE FROM product_category "
-                + "WHERE product_id=? "
-                + "AND category_id=?";
-
-        delete(deleteQuery, id, productType.getCategoryId());
+        productType.removeProductType(id);
         categories.remove(productType);
     }
-    
+
     /**
      * Removes all categories from an item
      */
     public void clearCategories() {
-        for (ProductType category: categories) {
-            removeCategory(category);
+        while (!categories.isEmpty()) {
+            removeCategory(categories.getFirst());
         }
+        
     }
 
     @Override

@@ -147,6 +147,27 @@ public abstract class Table implements Closeable {
         }
     }
     
+    protected void deleteMultipleRows(String query, Object... arguments) {
+        checkClosed();
+        Connection conn = DatabaseManager.getConnection();
+
+        try {
+            PreparedStatement ps = conn.prepareStatement(query);
+
+            // Adds all arguments to the query
+            setArguments(ps, arguments);
+
+            // Execute the update query
+            int rowsAffected = ps.executeUpdate();
+
+        } catch (SQLException ex) {
+            // Major error
+            throw new RuntimeException(ex.getMessage());
+        }
+        
+        close();
+    }
+    
     protected void delete(String query, Object... arguments) {
         checkClosed();
         Connection conn = DatabaseManager.getConnection();

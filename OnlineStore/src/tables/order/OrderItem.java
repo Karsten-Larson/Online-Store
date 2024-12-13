@@ -12,7 +12,7 @@ import tables.product.Product;
  *
  * @author karsten
  */
-class OrderItem extends Table {
+public class OrderItem extends Table {
 
     private static Map<Integer, OrderItem> cache = new HashMap<>();
 
@@ -118,6 +118,10 @@ class OrderItem extends Table {
 
     public int getQuantity() {
         return quantity;
+    }
+    
+    public Product getProduct() {
+        return Product.fromID(productId);
     }
 
     public void setOrderId(int orderId) {
